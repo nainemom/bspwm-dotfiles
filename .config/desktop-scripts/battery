@@ -1,0 +1,76 @@
+#! /bin/sh
+
+# dependencies: rofi tuned systemctl
+
+source "$(dirname "$0")/shared/rofi.sh"
+
+is_tuned_active() { # yes | no
+    if [[ "$(systemctl is-active tuned)" == "active" ]]; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+}
+
+power_menu() {
+    # first_menu
+    first_menu_items=""
+    if [[ "$(is_tuned_active)" == "yes" ]]; then
+        active_profile=$(tuned-adm active | cut -d ':' -f 2 | tr -d ' ')
+        first_menu_items+="turn_off_tuned\n"
+        first_menu_items+="change_tuned_level ($active_profile)\n"
+    else
+        first_menu_items+="turn_on_tuned\n"
+    fi
+    first_menu_selected=$(rofi_ask "$first_menu_items")
+    if [[ "$first_menu_selected" == "turn_on_tuned" ]]
+    then
+        rofi_sudo systemctl enable tuned
+        rofi_sudo systemctl start tuned
+        exit 0
+    elif [[ "$first_menu_selected" == "turn_off_tuned" ]]
+    then
+        rofi_sudo systemctl disable tuned
+        rofi_sudo systemctl stop tuned
+        exit 0
+    elif [[ "$first_menu_selected" != "change_tuned_level"* ]]
+    then
+        exit 1
+    fi
+
+    # change_tuned_level_menu
+    change_tuned_level_menu_items=""
+    list_of_profiles="$(tuned-adm list | grep "-" | head -n-1 | cut -d ' ' -f 2)"
+    change_tuned_level_selected=$(rofi_ask "$list_of_profiles")
+    if [[ "$change_tuned_level_selected" != "" ]]
+    then
+        tuned-adm profile $change_tuned_level_selected
+        exit 0
+    else
+        exit 1
+    fi
+}
+
+battery_icon() {
+    battery_path=$(upower -e | grep "BAT")
+    battery_percentage=$(upower -i $battery_path | grep "percentage:" | cut -d ':' -f 2 | tr -d ' ')
+    battery_state=$(upower -i $battery_path | grep "state:" | cut -d ':' -f 2 | tr -d ' ')
+    if [[ "$battery_state" == "discharging" ]]
+    then
+        echo " $battery_percentage"
+    else
+        echo " $battery_percentage"
+    fi
+}
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    battery_icon
+elif [[ "$1" == "--menu" ]]
+then
+    power_menu
+else
+    exit 1
+fi
+exit 0

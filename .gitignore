@@ -1,0 +1,9 @@
+/*
+!.gitignore
+
+.config/*
+!.config
+!.config/desktop-scripts
+!.config/bspwm
+!.config/sxhkd
+!.config/polybar

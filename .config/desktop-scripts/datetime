@@ -1,0 +1,13 @@
+#! /bin/sh
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    date +'%H:%M'
+elif [[ "$1" == "--menu" ]]
+then
+    rofi -e "$(date +'%A, %d %B %Y - %H:%M')"
+else
+    exit 1
+fi
+exit 0

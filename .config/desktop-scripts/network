@@ -1,0 +1,33 @@
+#! /bin/sh
+
+# dependencies: rofi nmcli nmtui ttf-material-design-icons(yay)
+
+network_icon() {
+    active_device_type=$(nmcli device status | grep " connected" | tr -s ' ' | cut -d ' ' -f 2)
+    active_connection=$(nmcli device status | grep " connected" | tr -s ' ' | cut -d ' ' -f 4)
+    if [[ "$active_device_type" == "wifi"* ]]
+    then
+        echo " $active_connection" | tr -s ' '
+    elif [[ "$active_device_type" == "ethernet"* ]]
+    then
+        echo " $active_connection" | tr -s ' '
+    else
+        echo ""
+    fi
+}
+
+wifi_menu() {
+    xterm -e "nmtui" &
+}
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    network_icon
+elif [[ "$1" == "--menu" ]]
+then
+    wifi_menu
+else
+    exit 1
+fi
+exit 0

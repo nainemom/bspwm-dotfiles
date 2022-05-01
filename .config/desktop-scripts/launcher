@@ -1,0 +1,15 @@
+#! /bin/sh
+
+# dependencies: rofi
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    echo ""
+elif [[ "$1" == "--menu" ]]
+then
+    rofi -modi drun -show drun
+else
+    exit 1
+fi
+exit 0
