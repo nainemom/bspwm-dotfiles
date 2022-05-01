@@ -12,6 +12,24 @@ is_bluetooth_active() { # yes | no
     fi
 }
 
+turn_bluetooth_on() {
+    rofi_sudo systemctl enable bluetooth
+    rofi_sudo systemctl start bluetooth
+    sleep 1
+    bluetoothctl power on &
+    sleep 1
+    bluetoothctl paired-devices | cut -d ' ' -f 2 | while read -r device; do
+        bluetoothctl connect "$device"
+    done
+}
+
+turn_bluetooth_off() {
+    bluetoothctl power off &
+    rofi_sudo systemctl disable bluetooth
+    rofi_sudo systemctl stop bluetooth
+    sleep 1
+}
+
 bluetooth_icon() {
     if [[ "$(is_bluetooth_active)" == "yes" ]]; then
         if [[ "$(bluetoothctl paired-devices | cut -d ' ' -f 2-99 | wc -l)" -gt "0" ]]; then
@@ -24,39 +42,42 @@ bluetooth_icon() {
     fi
 }
 
-bluetooth_menu() {
-    # first_menu
-    first_menu_items=""
-    if [[ "$(is_bluetooth_active)" == "yes" ]]; then
-        first_menu_items+="turn_off\n"
-        first_menu_items+="show_devices\n"
+bluetooth_device_menu() {
+    device_menu_items=""
+    if [[ "$(bluetoothctl info $1 | grep 'Connected:' | cut -d ' ' -f 2)" == "yes" ]]; then
+        device_menu_items+="disconnect\n";
+        device_menu_items+="forget\n";
     else
-        first_menu_items+="turn_on\n"
+        device_menu_items+="connect\n";
     fi
-    first_menu_selected=$(rofi_ask "$first_menu_items")
-    if [[ "$first_menu_selected" == "turn_on" ]]
+    device_menu_selected=$(rofi_ask "$device_menu_items")
+    if [[ "$device_menu_selected" == "disconnect" ]]
     then
-        rofi_sudo systemctl enable bluetooth
-        rofi_sudo systemctl start bluetooth
-        sleep 1
-        bluetoothctl power on &
-        sleep 1
-        bluetoothctl paired-devices | cut -d ' ' -f 2 | while read -r device; do
-            bluetoothctl connect "$device"
-        done
-        exit 0
-    elif [[ "$first_menu_selected" == "turn_off" ]]
+        bluetoothctl disconnect $1
+        bluetooth_device_menu $1
+    elif [[ "$device_menu_selected" == "forget" ]]
     then
-        rofi_sudo systemctl disable bluetooth
-        rofi_sudo systemctl stop bluetooth
-        bluetoothctl power off &
-        exit 0
-    elif [[ "$first_menu_selected" != "show_devices" ]]
+        bluetoothctl disconnect $1
+        bluetoothctl remove $1
+        bluetooth_device_menu $1
+    elif [[ "$device_menu_selected" != "connect" ]]
     then
-        exit 1
+        bluetooth_devices_menu
     fi
 
-    # show_devices
+    # connect to device
+    xterm -e "bt-agent" &
+    bt_agent_pid=$!
+    bluetoothctl agent on
+    bluetoothctl default-agent
+    bluetoothctl trust $selected_device
+    bluetoothctl pair $selected_device
+    bluetoothctl connect $selected_device
+    kill $bt_agent_pid
+    bluetooth_device_menu $1
+}
+
+bluetooth_devices_menu() {
     bluetoothctl scan on > /dev/null &
     devices_menu_selected="refresh_list"
     while [ "$devices_menu_selected" == "refresh_list" ]
@@ -72,42 +93,36 @@ bluetooth_menu() {
         devices_menu_selected=$(rofi_ask "$devices_menu_items")
     done
     kill $(pgrep -f "bluetoothctl scan on") &
-
-    # show device menu
-    selected_device=$(echo $devices_menu_selected | cut -d ' ' -f 1)
-    device_menu_items=""
-    if [[ "$(bluetoothctl info $selected_device | grep 'Connected:' | cut -d ' ' -f 2)" == "yes" ]]; then
-        device_menu_items+="disconnect\n";
-        device_menu_items+="forget\n";
-    else
-        device_menu_items+="connect\n";
+    if [[ "$devices_menu_selected" == "" ]]; then
+        bluetooth_menu
     fi
-    device_menu_selected=$(rofi_ask "$device_menu_items")
-    if [[ "$device_menu_selected" == "disconnect" ]]
+    bluetooth_device_menu "$(echo $devices_menu_selected | cut -d ' ' -f 1)"
+}
+
+
+bluetooth_menu() {
+    first_menu_items=""
+    if [[ "$(is_bluetooth_active)" == "yes" ]]; then
+        first_menu_items+="turn_off\n"
+        first_menu_items+="show_devices\n"
+    else
+        first_menu_items+="turn_on\n"
+    fi
+    first_menu_selected=$(rofi_ask "$first_menu_items")
+    if [[ "$first_menu_selected" == "turn_on" ]]
     then
-        bluetoothctl disconnect $selected_device
-        exit 0
-    elif [[ "$device_menu_selected" == "forget" ]]
+        turn_bluetooth_on
+        bluetooth_start_menu
+    elif [[ "$first_menu_selected" == "turn_off" ]]
     then
-        bluetoothctl disconnect $selected_device
-        bluetoothctl remove $selected_device
-        exit 0
-    elif [[ "$device_menu_selected" != "connect" ]]
+        turn_bluetooth_off
+        bluetooth_start_menu
+    elif [[ "$first_menu_selected" != "show_devices" ]]
     then
         exit 1
     fi
-
-    # connect to device
-    xterm -e "bt-agent" &
-    bt_agent_pid=$!
-    bluetoothctl agent on
-    bluetoothctl default-agent
-    bluetoothctl trust $selected_device
-    bluetoothctl pair $selected_device
-    bluetoothctl connect $selected_device
-    kill $bt_agent_pid
+    bluetooth_devices_menu
 }
-
 
 # main
 if [[ "$1" == "--icon" ]]
@@ -119,4 +134,3 @@ then
 else
     exit 1
 fi
-exit 0
