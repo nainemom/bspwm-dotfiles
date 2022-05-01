@@ -2,10 +2,11 @@
 
 # dependencies: rofi tuned systemctl
 
-source "$(dirname "$0")/shared/rofi.sh"
+source "$(dirname "$0")/shared/rofi"
 
 is_tuned_active() { # yes | no
-    if [[ "$(systemctl is-active tuned)" == "active" ]]; then
+    if [[ "$(systemctl is-active tuned)" == "active" ]]
+    then
         echo "yes"
     else
         echo "no"
@@ -28,7 +29,8 @@ power_tuned_levels_menu() {
 
 power_menu() {
     first_menu_items=""
-    if [[ "$(is_tuned_active)" == "yes" ]]; then
+    if [[ "$(is_tuned_active)" == "yes" ]]
+    then
         first_menu_items+="turn_off_tuned\n"
         first_menu_items+="change_tuned_level\n"
     else

@@ -1,6 +1,6 @@
 #! /bin/sh
 
-export SUDO_ASKPASS="$(dirname "$0")/shared/rofi_ask_pass.sh"
+export SUDO_ASKPASS="$(dirname "$0")/shared/rofi_ask_pass"
 
 rofi_sudo() {
     sudo -A $@
@@ -10,12 +10,14 @@ rofi_ask() {
     selected_row=0
     selected_text=$2
     options=$1
-    if [[ ! -z "$selected_text" ]]; then
+    if [[ ! -z "$selected_text" ]]
+    then
         IFSBAK=$IFS
         IFS=$'\n'
         for line in $options
         do
-            if [[ "$line" == "$selected_text" ]]; then
+            if [[ "$line" == "$selected_text" ]]
+            then
                 break
             else
                 ((selected_row++))

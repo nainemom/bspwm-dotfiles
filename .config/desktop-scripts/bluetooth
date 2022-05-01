@@ -2,10 +2,11 @@
 
 # dependencies: rofi bluez bluez-utils bluez-tools systemctl xterm ttf-material-design-icons(yay)
 
-source "$(dirname "$0")/shared/rofi.sh"
+source "$(dirname "$0")/shared/rofi"
 
 is_bluetooth_active() { # yes | no
-    if [[ "$(systemctl is-active bluetooth)" == "active" ]]; then
+    if [[ "$(systemctl is-active bluetooth)" == "active" ]]
+    then
         bluetoothctl show | grep 'Powered' | cut -d ':' -f 2 | tr -d ' '
     else
         echo "no"
@@ -18,7 +19,8 @@ turn_bluetooth_on() {
     sleep 1
     bluetoothctl power on &
     sleep 1
-    bluetoothctl paired-devices | cut -d ' ' -f 2 | while read -r device; do
+    bluetoothctl paired-devices | cut -d ' ' -f 2 | while read -r device
+    do
         bluetoothctl connect "$device"
     done
 }
@@ -31,8 +33,10 @@ turn_bluetooth_off() {
 }
 
 bluetooth_icon() {
-    if [[ "$(is_bluetooth_active)" == "yes" ]]; then
-        if [[ "$(bluetoothctl paired-devices | cut -d ' ' -f 2-99 | wc -l)" -gt "0" ]]; then
+    if [[ "$(is_bluetooth_active)" == "yes" ]]
+    then
+        if [[ "$(bluetoothctl paired-devices | cut -d ' ' -f 2-99 | wc -l)" -gt "0" ]]
+        then
             echo " $(bluetoothctl paired-devices | cut -d ' ' -f3-99  | sed 'N;s/\n/, /')" | tr -s ' '
         else
             echo ""
@@ -44,11 +48,12 @@ bluetooth_icon() {
 
 bluetooth_device_menu() {
     device_menu_items=""
-    if [[ "$(bluetoothctl info $1 | grep 'Connected:' | cut -d ' ' -f 2)" == "yes" ]]; then
-        device_menu_items+="disconnect\n";
-        device_menu_items+="forget\n";
+    if [[ "$(bluetoothctl info $1 | grep 'Connected:' | cut -d ' ' -f 2)" == "yes" ]]
+    then
+        device_menu_items+="disconnect\n"
+        device_menu_items+="forget\n"
     else
-        device_menu_items+="connect\n";
+        device_menu_items+="connect\n"
     fi
     device_menu_selected=$(rofi_ask "$device_menu_items")
     if [[ "$device_menu_selected" == "disconnect" ]]
@@ -93,7 +98,8 @@ bluetooth_devices_menu() {
         devices_menu_selected=$(rofi_ask "$devices_menu_items")
     done
     kill $(pgrep -f "bluetoothctl scan on") &
-    if [[ "$devices_menu_selected" == "" ]]; then
+    if [[ "$devices_menu_selected" == "" ]]
+    then
         bluetooth_menu
     fi
     bluetooth_device_menu "$(echo $devices_menu_selected | cut -d ' ' -f 1)"
@@ -102,7 +108,8 @@ bluetooth_devices_menu() {
 
 bluetooth_menu() {
     first_menu_items=""
-    if [[ "$(is_bluetooth_active)" == "yes" ]]; then
+    if [[ "$(is_bluetooth_active)" == "yes" ]]
+    then
         first_menu_items+="turn_off\n"
         first_menu_items+="show_devices\n"
     else
