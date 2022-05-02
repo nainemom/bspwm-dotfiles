@@ -1,0 +1,194 @@
+#! /bin/sh
+
+# dependencies: rofi pactl ttf-material-design-icons(yay)
+
+source "$(dirname "$0")/shared/rofi"
+
+get_cards() {
+    pactl list cards short | awk '{print $2}'
+}
+
+get_sinks() {
+    pactl list sinks short | awk '{print $2}' | grep "output"
+}
+
+get_sources() {
+    pactl list sources short | awk '{print $2}' | grep "input"
+}
+
+source_ports() {
+    pactl list sources | awk "/$1/,/Active Port:/" | awk '/Ports:/,/Active Port:/' | head -n-1 | tail -n +2 | tr -d '\t' | grep -v "not available"
+}
+
+get_card_profiles() {
+    pactl list cards | awk "/$1/,/Active Profile:/" | awk '/Profiles:/,/Active Profiles:/' | head -n-1 | tail -n +2 | tr -d '\t' | grep -v "available: no" | awk '{print substr($1, 0, length($1) - 1)}'
+}
+
+get_card_active_profile() {
+    pactl list cards | awk "/$1/,/Active Profile:/" | grep "Active Profile:" | awk '{print $3}'
+}
+
+cards_menu() {
+    cards=$(get_cards)
+    selected_card=$(rofi_ask "$cards")
+    if [[ "$selected_card" != "" ]]
+    then
+        profiles=$(get_card_profiles "$selected_card")
+        active_profile=$(get_card_active_profile "$selected_card")
+        selected_profile=$(rofi_ask "$profiles" "$active_profile")
+        if [[ "$selected_profile" != "" ]]
+        then
+            pactl set-card-profile "$selected_card" "$selected_profile"
+        fi
+    fi
+    sound_menu
+}
+
+sinks_or_sources_menu() {
+    items=""
+    default=""
+    if [[ "$1" == "sinks" ]]
+    then
+        items=$(get_sinks)
+        default=$(pactl get-default-sink)
+    else
+        items=$(get_sources)
+        default=$(pactl get-default-source)
+    fi
+    selected=$(rofi_ask "$items" "$default")
+
+    if [[ "$selected" != "" ]]
+    then
+        if [[ "$1" == "sinks" ]]
+        then
+            pactl set-default-sink $selected
+        else
+            pactl set-default-source $selected
+        fi
+    fi
+    sound_menu
+}
+
+get_sink_volume() {
+    pactl get-sink-volume @DEFAULT_SINK@ | grep "Volume" | cut -d '/' -f 2 | tr -d ' '
+}
+
+get_source_volume() {
+    pactl get-source-volume @DEFAULT_SOURCE@ | grep "Volume" | cut -d '/' -f 2 | tr -d ' '
+}
+
+is_sink_mute() { # yes | no
+    pactl get-sink-mute @DEFAULT_SINK@ | cut -d ':' -f 2 | tr -d ' '
+}
+
+is_source_mute() { # yes | no
+    pactl get-source-mute @DEFAULT_SOURCE@ | cut -d ':' -f 2 | tr -d ' '
+}
+
+sink_or_source_volume_menu() {
+    volume="100%"
+    mute="no"
+    if [[ "$1" == "sink" ]]
+    then
+        volume="$(get_sink_volume)"
+        mute="$(is_sink_mute)"
+    else
+        volume="$(get_source_volume)"
+        mute="$(is_source_mute)"
+    fi
+
+    menu_items=""
+
+    if [[ "$mute" == "yes" ]]
+    then
+        menu_items+="unmute\n"
+    else
+        menu_items+="mute\n"
+    fi
+    menu_items+="$volume\n"
+    selected=$(rofi_ask "$menu_items")
+
+    if [[ "$selected" == "mute" ]] || [[ "$selected" == "unmute" ]]
+    then
+        if [[ "$1" == "sink" ]]
+        then
+            pactl set-sink-mute @DEFAULT_SINK@ toggle
+        else
+            pactl set-source-mute @DEFAULT_SOURCE@ toggle
+        fi
+    elif [[ "$selected" == *"%" ]]
+    then
+        new_volume=$(rofi_get)
+        if [[ "$new_volume" != *"%" ]]
+        then
+            new_volume+="%"
+        fi
+        
+        if [[ "$1" == "sink" ]]
+        then
+            pactl set-sink-volume @DEFAULT_SINK@ $new_volume
+        else
+            pactl set-source-volume @DEFAULT_SOURCE@ $new_volume
+        fi
+    else
+        sound_menu
+        return
+    fi
+    sink_or_source_volume_menu $1
+}
+
+sound_menu() {
+    first_menu_items=""
+    first_menu_items+="set_sink_volume\n"
+    first_menu_items+="set_source_volume\n"
+    first_menu_items+="show_sinks\n"
+    first_menu_items+="show_sources\n"
+    first_menu_items+="show_cards\n"
+    first_menu_selected=$(rofi_ask "$first_menu_items")
+    if [[ "$first_menu_selected" == "show_cards" ]]
+    then
+        cards_menu
+    elif [[ "$first_menu_selected" == "show_sources" ]]
+    then
+        sinks_or_sources_menu "sources"
+    elif [[ "$first_menu_selected" == "show_sinks" ]]
+    then
+        sinks_or_sources_menu "sinks"
+    elif [[ "$first_menu_selected" == "set_sink_volume" ]]
+    then
+        sink_or_source_volume_menu "sink"
+    elif [[ "$first_menu_selected" == "set_source_volume" ]]
+    then
+        sink_or_source_volume_menu "source"
+    else
+        exit 1
+    fi
+}
+
+sound_icon() {
+    sink_icon=""
+    if [[ "$(is_sink_mute)" == "yes" ]] || [[ "$(get_sink_volume)" == "0%" ]]
+    then
+        sink_icon=""
+    fi
+    source_icon=""
+    if [[ "$(is_source_mute)" == "yes" ]] || [[ "$(get_source_volume)" == "0%" ]]
+    then
+        source_icon=""
+    fi
+
+    echo "$sink_icon $(get_sink_volume) $source_icon $(get_source_volume)"
+}
+
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    sound_icon
+elif [[ "$1" == "--menu" ]]
+then
+    sound_menu
+else
+    exit 1
+fi
+exit 0
