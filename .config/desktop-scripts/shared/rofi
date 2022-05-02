@@ -6,6 +6,10 @@ rofi_sudo() {
     sudo -A $@
 }
 
+rofi_get() {
+    rofi -dmenu -no-fixed-num-lines -p "Enter Value"
+}
+
 rofi_ask() {
     selected_row=0
     selected_text=$2
