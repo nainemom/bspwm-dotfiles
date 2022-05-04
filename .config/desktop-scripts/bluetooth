@@ -35,9 +35,10 @@ turn_bluetooth_off() {
 bluetooth_icon() {
     if [[ "$(is_bluetooth_active)" == "yes" ]]
     then
-        if [[ "$(bluetoothctl paired-devices | cut -d ' ' -f 2-99 | wc -l)" -gt "0" ]]
+        paired_devices_len=$(bluetoothctl paired-devices | wc -l)
+        if [[ "$paired_devices_len" -gt "0" ]]
         then
-            echo " $(bluetoothctl paired-devices | cut -d ' ' -f3-99  | sed 'N;s/\n/, /')" | tr -s ' '
+            echo " $paired_devices_len Connected"
         else
             echo ""
         fi
