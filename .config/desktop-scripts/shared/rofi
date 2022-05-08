@@ -7,12 +7,22 @@ rofi_sudo() {
 }
 
 rofi_get() {
-    rofi -dmenu -no-fixed-num-lines -p "Enter Value"
+    title=$1
+    if [[ -z "$title" ]]
+    then
+        title="Enter Value"
+    fi
+    rofi -dmenu -no-fixed-num-lines -p "$title"
 }
 
 rofi_ask() {
     selected_row=0
     selected_text=$2
+    title=$3
+    if [[ -z "$title" ]]
+    then
+        title="Menu"
+    fi
     options=$1
     if [[ ! -z "$selected_text" ]]
     then
@@ -29,5 +39,5 @@ rofi_ask() {
         done
         IFS=$IFSBAK
     fi
-    echo -e "$options" | tr -s "\n" | rofi -dmenu -no-fixed-num-lines -p "Select Action" -selected-row $selected_row
+    echo -e "$options" | tr -s "\n" | rofi -dmenu -no-fixed-num-lines -p "$title" -selected-row $selected_row 
 }
