@@ -4,6 +4,8 @@
 
 source "$(dirname "$0")/shared/rofi"
 
+rofi_title="Sound Manager"
+
 get_cards() {
     pactl list cards short | awk '{print $2}'
 }
@@ -30,12 +32,12 @@ get_card_active_profile() {
 
 cards_menu() {
     cards=$(get_cards)
-    selected_card=$(rofi_ask "$cards")
+    selected_card=$(rofi_ask "$cards" "" "Select Card")
     if [[ "$selected_card" != "" ]]
     then
         profiles=$(get_card_profiles "$selected_card")
         active_profile=$(get_card_active_profile "$selected_card")
-        selected_profile=$(rofi_ask "$profiles" "$active_profile")
+        selected_profile=$(rofi_ask "$profiles" "$active_profile" "Select '$selected_card' Card Profile")
         if [[ "$selected_profile" != "" ]]
         then
             pactl set-card-profile "$selected_card" "$selected_profile"
@@ -47,6 +49,7 @@ cards_menu() {
 sinks_or_sources_menu() {
     items=""
     default=""
+    title="Output"
     if [[ "$1" == "sinks" ]]
     then
         items=$(get_sinks)
@@ -54,8 +57,9 @@ sinks_or_sources_menu() {
     else
         items=$(get_sources)
         default=$(pactl get-default-source)
+        title="Input"
     fi
-    selected=$(rofi_ask "$items" "$default")
+    selected=$(rofi_ask "$items" "$default" "Set Default $title Device")
 
     if [[ "$selected" != "" ]]
     then
@@ -88,6 +92,7 @@ is_source_mute() { # yes | no
 sink_or_source_volume_menu() {
     volume="100%"
     mute="no"
+    title="Output"
     if [[ "$1" == "sink" ]]
     then
         volume="$(get_sink_volume)"
@@ -95,20 +100,23 @@ sink_or_source_volume_menu() {
     else
         volume="$(get_source_volume)"
         mute="$(is_source_mute)"
+        title="Input"
     fi
 
     menu_items=""
+    unmute_menu_item="Unmute"
+    mute_menu_item="Mute"
 
     if [[ "$mute" == "yes" ]]
     then
-        menu_items+="unmute\n"
+        menu_items+="$unmute_menu_item\n"
     else
-        menu_items+="mute\n"
+        menu_items+="$mute_menu_item\n"
     fi
     menu_items+="$volume\n"
-    selected=$(rofi_ask "$menu_items")
+    selected=$(rofi_ask "$menu_items" "" "Set $title Volume")
 
-    if [[ "$selected" == "mute" ]] || [[ "$selected" == "unmute" ]]
+    if [[ "$selected" == "$mute_menu_item" ]] || [[ "$selected" == "$unmute_menu_item" ]]
     then
         if [[ "$1" == "sink" ]]
         then
@@ -118,7 +126,7 @@ sink_or_source_volume_menu() {
         fi
     elif [[ "$selected" == *"%" ]]
     then
-        new_volume=$(rofi_get)
+        new_volume=$(rofi_get "Enter $title Volume (0 to 150)")
         if [[ "$new_volume" != *"%" ]]
         then
             new_volume+="%"
@@ -139,25 +147,31 @@ sink_or_source_volume_menu() {
 
 sound_menu() {
     first_menu_items=""
-    first_menu_items+="set_sink_volume\n"
-    first_menu_items+="set_source_volume\n"
-    first_menu_items+="show_sinks\n"
-    first_menu_items+="show_sources\n"
-    first_menu_items+="show_cards\n"
-    first_menu_selected=$(rofi_ask "$first_menu_items")
-    if [[ "$first_menu_selected" == "show_cards" ]]
+    set_sink_volume_menu_item="Set Output Volume"
+    set_source_volume_menu_item="Set Input Volume"
+    show_sinks_menu_item="Select Output Device"
+    show_sources_menu_item="Select Input Device"
+    show_cards_menu_item="Manage Cards Profiles"
+
+    first_menu_items+="$set_sink_volume_menu_item\n"
+    first_menu_items+="$set_source_volume_menu_item\n"
+    first_menu_items+="$show_sinks_menu_item\n"
+    first_menu_items+="$show_sources_menu_item\n"
+    first_menu_items+="$show_cards_menu_item\n"
+    first_menu_selected=$(rofi_ask "$first_menu_items" "" "Sound Manager")
+    if [[ "$first_menu_selected" == "$show_cards_menu_item" ]]
     then
         cards_menu
-    elif [[ "$first_menu_selected" == "show_sources" ]]
+    elif [[ "$first_menu_selected" == "$show_sources_menu_item" ]]
     then
         sinks_or_sources_menu "sources"
-    elif [[ "$first_menu_selected" == "show_sinks" ]]
+    elif [[ "$first_menu_selected" == "$show_sinks_menu_item" ]]
     then
         sinks_or_sources_menu "sinks"
-    elif [[ "$first_menu_selected" == "set_sink_volume" ]]
+    elif [[ "$first_menu_selected" == "$set_sink_volume_menu_item" ]]
     then
         sink_or_source_volume_menu "sink"
-    elif [[ "$first_menu_selected" == "set_source_volume" ]]
+    elif [[ "$first_menu_selected" == "$set_source_volume_menu_item" ]]
     then
         sink_or_source_volume_menu "source"
     else

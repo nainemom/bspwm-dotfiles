@@ -4,6 +4,8 @@
 
 source "$(dirname "$0")/shared/rofi"
 
+rofi_title="Bluetooth Manager"
+
 is_bluetooth_active() { # yes | no
     if [[ "$(systemctl is-active bluetooth)" == "active" ]]
     then
@@ -49,24 +51,27 @@ bluetooth_icon() {
 
 bluetooth_device_menu() {
     device_menu_items=""
+    disconnect_menu_item="Disconnect"
+    connect_menu_item="Connect"
+    forget_menu_item="Forget"
     if [[ "$(bluetoothctl info $1 | grep 'Connected:' | cut -d ' ' -f 2)" == "yes" ]]
     then
-        device_menu_items+="disconnect\n"
-        device_menu_items+="forget\n"
+        device_menu_items+="$disconnect_menu_item\n"
+        device_menu_items+="$forget_menu_item\n"
     else
-        device_menu_items+="connect\n"
+        device_menu_items+="$connect_menu_item\n"
     fi
-    device_menu_selected=$(rofi_ask "$device_menu_items")
-    if [[ "$device_menu_selected" == "disconnect" ]]
+    device_menu_selected=$(rofi_ask "$device_menu_items" "" "$rofi_title")
+    if [[ "$device_menu_selected" == "$disconnect_menu_item" ]]
     then
         bluetoothctl disconnect $1
         bluetooth_device_menu $1
-    elif [[ "$device_menu_selected" == "forget" ]]
+    elif [[ "$device_menu_selected" == "$forget_menu_item" ]]
     then
         bluetoothctl disconnect $1
         bluetoothctl remove $1
         bluetooth_device_menu $1
-    elif [[ "$device_menu_selected" != "connect" ]]
+    elif [[ "$device_menu_selected" != "$connect_menu_item" ]]
     then
         bluetooth_devices_menu
     fi
@@ -84,11 +89,12 @@ bluetooth_device_menu() {
 }
 
 bluetooth_devices_menu() {
+    refresh_list_menu_item="Refresh List"
     bluetoothctl scan on > /dev/null &
-    devices_menu_selected="refresh_list"
-    while [ "$devices_menu_selected" == "refresh_list" ]
+    devices_menu_selected="$refresh_list_menu_item"
+    while [ "$devices_menu_selected" == "$refresh_list_menu_item" ]
     do
-        devices_menu_items="refresh_list\n"
+        devices_menu_items="$refresh_list_menu_item\n"
         IFSBAK=$IFS
         IFS=$'\n'
         for device in $(bluetoothctl devices | cut -d ' ' -f 2-99)
@@ -96,7 +102,7 @@ bluetooth_devices_menu() {
             devices_menu_items+="$device\n"
         done
         IFS=$IFSBAK
-        devices_menu_selected=$(rofi_ask "$devices_menu_items")
+        devices_menu_selected=$(rofi_ask "$devices_menu_items" "" "$rofi_title")
     done
     kill $(pgrep -f "bluetoothctl scan on") &
     if [[ "$devices_menu_selected" == "" ]]
@@ -109,23 +115,27 @@ bluetooth_devices_menu() {
 
 bluetooth_menu() {
     first_menu_items=""
+    # 
+    turn_off_menu_item="Turn Off"
+    turn_on_menu_item="Turn On"
+    show_devices_menu_item="Show Devices"
     if [[ "$(is_bluetooth_active)" == "yes" ]]
     then
-        first_menu_items+="turn_off\n"
-        first_menu_items+="show_devices\n"
+        first_menu_items+="$turn_off_menu_item\n"
+        first_menu_items+="$show_devices_menu_item\n"
     else
-        first_menu_items+="turn_on\n"
+        first_menu_items+="$turn_on_menu_item\n"
     fi
-    first_menu_selected=$(rofi_ask "$first_menu_items")
-    if [[ "$first_menu_selected" == "turn_on" ]]
+    first_menu_selected=$(rofi_ask "$first_menu_items" "" "$rofi_title")
+    if [[ "$first_menu_selected" == "$turn_on_menu_item" ]]
     then
         turn_bluetooth_on
         bluetooth_start_menu
-    elif [[ "$first_menu_selected" == "turn_off" ]]
+    elif [[ "$first_menu_selected" == "$turn_off_menu_item" ]]
     then
         turn_bluetooth_off
         bluetooth_start_menu
-    elif [[ "$first_menu_selected" != "show_devices" ]]
+    elif [[ "$first_menu_selected" != "$show_devices_menu_item" ]]
     then
         exit 1
     fi

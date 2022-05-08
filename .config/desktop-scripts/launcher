@@ -5,10 +5,10 @@
 # main
 if [[ "$1" == "--icon" ]]
 then
-    echo " Run"
+    echo " Launcher"
 elif [[ "$1" == "--menu" ]]
 then
-    rofi -modi drun -show drun
+    rofi -modi drun -show drun -display-drun "Application Launcher"
 else
     exit 1
 fi

@@ -17,7 +17,7 @@ power_tuned_levels_menu() {
     change_tuned_level_menu_items=""
     list_of_profiles="$(tuned-adm list | grep "-" | head -n-1 | cut -d ' ' -f 2)"
     active_tuned_profile=$(tuned-adm active | cut -d ':' -f 2 | tr -d ' ')
-    change_tuned_level_selected=$(rofi_ask "$list_of_profiles" "$active_tuned_profile")
+    change_tuned_level_selected=$(rofi_ask "$list_of_profiles" "$active_tuned_profile" "Select Tuned Profile")
     if [[ "$change_tuned_level_selected" != "" ]]
     then
         tuned-adm profile $change_tuned_level_selected
@@ -29,25 +29,28 @@ power_tuned_levels_menu() {
 
 power_menu() {
     first_menu_items=""
+    turn_on_tuned_menu_item="Start Tuned Service"
+    turn_off_tuned_menu_item="Stop Tuned Service"
+    change_tuned_level_menu_item="Change Tuned Profile"
     if [[ "$(is_tuned_active)" == "yes" ]]
     then
-        first_menu_items+="turn_off_tuned\n"
-        first_menu_items+="change_tuned_level\n"
+        first_menu_items+="$turn_off_tuned_menu_item\n"
+        first_menu_items+="$change_tuned_level_menu_item\n"
     else
-        first_menu_items+="turn_on_tuned\n"
+        first_menu_items+="$turn_on_tuned_menu_item\n"
     fi
-    first_menu_selected=$(rofi_ask "$first_menu_items")
-    if [[ "$first_menu_selected" == "turn_on_tuned" ]]
+    first_menu_selected=$(rofi_ask "$first_menu_items" "" "Power Manager")
+    if [[ "$first_menu_selected" == "$turn_on_tuned_menu_item" ]]
     then
         rofi_sudo systemctl enable tuned
         rofi_sudo systemctl start tuned
         power_menu
-    elif [[ "$first_menu_selected" == "turn_off_tuned" ]]
+    elif [[ "$first_menu_selected" == "$turn_off_tuned_menu_item" ]]
     then
         rofi_sudo systemctl disable tuned
         rofi_sudo systemctl stop tuned
         power_menu
-    elif [[ "$first_menu_selected" != "change_tuned_level" ]]
+    elif [[ "$first_menu_selected" != "$change_tuned_level_menu_item" ]]
     then
         exit 1
     fi
