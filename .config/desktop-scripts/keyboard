@@ -1,0 +1,20 @@
+#! /bin/sh
+
+# dependencies: setxkbmap xkb-switch(yay) ttf-material-design-icons(yay)
+
+keyboard_icon() {
+    echo " $(xkb-switch -p)"
+    # echo " $(setxkbmap -query | grep "layout" | awk '{print $2}')"
+}
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    keyboard_icon
+elif [[ "$1" == "--next" ]]
+then
+    xkb-switch -n
+else
+    exit 1
+fi
+exit 0
