@@ -4,8 +4,6 @@
 
 source "$(dirname "$0")/shared/rofi"
 
-rofi_title="Sound Manager"
-
 get_cards() {
     pactl list cards short | awk '{print $2}'
 }
