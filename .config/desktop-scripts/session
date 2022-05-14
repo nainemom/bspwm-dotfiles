@@ -1,0 +1,51 @@
+#! /bin/sh
+
+# dependencies: rofi i3lock ttf-material-design-icons(yay)
+
+source "$(dirname "$0")/shared/rofi"
+
+session_menu() {
+    menu_items=""
+    lock_item="Lock"
+    logout_item="Logout"
+    shutdown_item="Shutdown"
+    restart_item="Restart"
+
+    menu_items+="$lock_item\n"
+    menu_items+="$logout_item\n"
+    menu_items+="$shutdown_item\n"
+    menu_items+="$restart_item\n"
+    selected_item=$(rofi_ask "$menu_items" "" "Session Menu")
+    if [[ "$selected_item" == "$lock_item" ]]
+    then
+        xkb-switch -s us # set keyboard layout
+        i3lock -c 000000
+    elif [[ "$selected_item" == "$logout_item" ]]
+    then
+        bspc quit
+    elif [[ "$selected_item" == "$shutdown_item" ]]
+    then
+        shutdown -h now
+    elif [[ "$selected_item" == "$restart_item" ]]
+    then
+        shutdown -r now
+    else
+        exit 1
+    fi
+}
+
+session_icon() {
+    echo " $(id -un)"
+}
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    session_icon
+elif [[ "$1" == "--menu" ]]
+then
+    session_menu
+else
+    exit 1
+fi
+exit 0
