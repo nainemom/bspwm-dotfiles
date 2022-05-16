@@ -40,7 +40,7 @@ bluetooth_icon() {
         paired_devices_len=$(bluetoothctl paired-devices | wc -l)
         if [[ "$paired_devices_len" -gt "0" ]]
         then
-            echo " $paired_devices_len Connected"
+            echo ""
         else
             echo ""
         fi
