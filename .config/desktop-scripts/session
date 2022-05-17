@@ -15,7 +15,7 @@ session_menu() {
     menu_items+="$logout_item\n"
     menu_items+="$shutdown_item\n"
     menu_items+="$restart_item\n"
-    selected_item=$(rofi_ask "$menu_items" "" "Session Menu")
+    selected_item=$(rofi_ask "$menu_items" "" "$(id -un)")
     if [[ "$selected_item" == "$lock_item" ]]
     then
         xkb-switch -s us # set keyboard layout
@@ -35,7 +35,7 @@ session_menu() {
 }
 
 session_icon() {
-    echo " $(id -un)"
+    echo ""
 }
 
 # main
