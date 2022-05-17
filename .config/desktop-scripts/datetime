@@ -3,10 +3,10 @@
 # main
 if [[ "$1" == "--icon" ]]
 then
-    echo " $(date +'%a %H:%M')"
+    date +'%a %H:%M'
 elif [[ "$1" == "--menu" ]]
 then
-    rofi -e "$(date +'%A, %d %B %Y - %H:%M')"
+    rofi -e "$(date +'%A, %d %B %Y - %H:%M:%S')"
 else
     exit 1
 fi
