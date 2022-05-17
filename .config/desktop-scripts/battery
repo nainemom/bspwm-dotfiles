@@ -61,12 +61,17 @@ battery_icon() {
     battery_path=$(upower -e | grep "BAT")
     battery_percentage=$(upower -i $battery_path | grep "percentage:" | cut -d ':' -f 2 | tr -d ' ')
     battery_state=$(upower -i $battery_path | grep "state:" | cut -d ':' -f 2 | tr -d ' ')
+    icon=""
     if [[ "$battery_state" == "discharging" ]]
     then
-        echo " $battery_percentage"
-    else
-        echo " $battery_percentage"
+        icon=""
     fi
+    text=""
+    if [[ "$(echo $battery_percentage | tr -d '%')" -lt "95" ]]
+    then
+        text=" $battery_percentage"
+    fi
+    echo "$icon$text"
 }
 
 # main
