@@ -28,7 +28,7 @@ rofi_ask() {
     then
         IFSBAK=$IFS
         IFS=$'\n'
-        for line in $options
+        for line in $(echo -e "$options")
         do
             if [[ "$line" == "$selected_text" ]]
             then
