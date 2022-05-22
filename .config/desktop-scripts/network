@@ -2,6 +2,8 @@
 
 # dependencies: rofi nmcli nmtui ttf-material-design-icons(yay)
 
+source "$(dirname "$0")/shared/rofi"
+
 network_icon() {
     active_device_type=$(nmcli device status | grep " connected" | tr -s ' ' | cut -d ' ' -f 2)
     active_connection=$(nmcli device status | grep " connected" | tr -s ' ' | cut -d ' ' -f 4)
@@ -16,8 +18,17 @@ network_icon() {
     fi
 }
 
-wifi_menu() {
-    xterm -e "nmtui" &
+network_menu() {
+    menu_items=""
+    advanced_item="Advanced Settings"
+    menu_items+="$advanced_item\n"
+    selected_item=$(rofi_ask "$menu_items" "" "Network Menu")
+    if [[ "$selected_item" == "$advanced_item" ]]
+    then
+        xterm -e "nmtui" &
+    else
+        exit 1
+    fi
 }
 
 # main
@@ -26,7 +37,7 @@ then
     network_icon
 elif [[ "$1" == "--menu" ]]
 then
-    wifi_menu
+    network_menu
 else
     exit 1
 fi
