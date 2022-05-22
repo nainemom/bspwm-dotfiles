@@ -1,0 +1,79 @@
+
+* {
+  font: "NotoSans Regular 12";
+  dbg: #000000;
+  dbg1: #000000AA;
+  dfg: #FFFFFF;
+  dfg2: #FFFFFF55;
+  background-color: transparent;
+  text-color: @dfg;
+  margin: 0;
+  padding: 0;
+  spacing: 0;
+}
+
+window {
+  background-color: @dbg;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  location: center;
+  y-offset: -100;
+  width: 380;
+}
+
+inputbar {
+  padding: 8px 12px;
+  spacing: 0;
+  children: [ prompt, entry ];
+}
+
+prompt {
+  text-color: @dfg;
+}
+
+entry,
+textbox,
+message {
+  font: inherit;
+  placeholder: "";
+  placeholder-color: @dfg2;
+  text-color: @dfg;
+  blink: true;
+  placeholder: "Start Typing...";
+  padding: 0 8;
+}
+
+textbox {
+  padding: 8;
+}
+
+listview {
+  lines: 8;
+  columns: 1;
+  fixed-height: false;
+  border: 0;
+}
+
+element {
+  padding: 0;
+}
+
+element-text {
+  background-color: @dbg;
+  text-color: @dfg;
+  padding: 4 12;
+  font: "NotoSans Regular 10";
+  highlight: underline;
+}
+
+element-text selected {
+  background-color: @dfg;
+  text-color: @dbg;
+}
+
+scrollbar {
+  background-color: transparent;
+  handle-width: 2;
+  handle-color: @dfg2;
+}
