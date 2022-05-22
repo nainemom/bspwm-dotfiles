@@ -1,0 +1,162 @@
+#! /bin/sh
+
+# dependencies: rofi nmcli nmtui ttf-material-design-icons(yay)
+
+source "$(dirname "$0")/shared/rofi"
+
+get_active_window() {
+    xdotool getwindowfocus &>/dev/null
+    if [[ "$?" == "0" ]]
+    then
+        xdotool getwindowfocus
+    else
+        echo ""
+    fi
+}
+
+get_window_name() {
+    xdotool getwindowclassname $1 | tr [:upper:] [:lower:]
+}
+
+activewindow_icon() {
+    active_window=$(get_active_window)
+    if [[ -z $active_window ]]
+    then
+        echo ""
+    else
+        name=$(get_window_name $active_window)
+        if [[ -z $name ]]
+        then
+            echo ""
+        else
+            echo " $name"
+        fi
+    fi
+}
+
+workspace_icon() {
+    workspaces_length=$(xdotool get_num_desktops)
+    active_workspace=$(xdotool get_desktop)
+    output=""
+    for (( i=0; i<=((workspaces_length-1)); i++ ))
+    do
+        if [[ "$i" == "$active_workspace" ]]
+        then
+            output+=""
+        else
+            output+=""
+        fi
+    done
+    echo "$output"
+}
+
+workspaceswitcher_menu() {
+    workspaces_length=$(xdotool get_num_desktops)
+    active_workspace="Workspace $(xdotool get_desktop)"
+    menu_items=""
+    for (( i=0; i<=((workspaces_length-1)); i++ ))
+    do
+        menu_items+="Workspace $i\n"
+    done
+    selected_item=$(rofi_ask "$menu_items" "$active_workspace" "Workspace Switcher" | cut -d ' ' -f 2)
+    if [[ $selected_item -lt "$workspaces_length" ]]
+    then
+        xdotool set_desktop $selected_item
+    else
+        exit 1
+    fi
+}
+
+activewindow_menu() {
+    menu_items=""
+    active_window=$(get_active_window)
+    active_window_name=$(get_window_name $active_window)
+    minimize_item="Minimize"
+    maximize_item="Maximize"
+    close_item="Close"
+    kill_item="Kill"
+    move_to_right_ws_item="Move to Next Workspace"
+    move_to_left_ws_item="Move to Prev Workspace"
+    menu_items+="$minimize_item\n"
+    menu_items+="$maximize_item\n"
+    menu_items+="$close_item\n"
+    menu_items+="$kill_item\n"
+    menu_items+="$move_to_right_ws_item\n"
+    menu_items+="$move_to_left_ws_item\n"
+    selected_item=$(rofi_ask "$menu_items" "" "$active_window_name")
+    if [[ "$selected_item" == "$minimize_item" ]]
+    then
+        xdotool windowminimize $active_window
+    elif [[ "$selected_item" == "$maximize_item" ]]
+    then
+        xdotool windowsize $active_window 100% 100%
+    elif [[ "$selected_item" == "$close_item" ]]
+    then
+        xdotool windowclose $active_window
+    elif [[ "$selected_item" == "$kill_item" ]]
+    then
+        xdotool windowkill $active_window
+    elif [[ "$selected_item" == "$move_to_right_ws_item" ]]
+    then
+        new_workspace=$(($(xdotool get_desktop)+1))
+        xdotool set_desktop_for_window $active_window $new_workspace
+        xdotool set_desktop $new_workspace
+    elif [[ "$selected_item" == "$move_to_left_ws_item" ]]
+    then
+        new_workspace=$(($(xdotool get_desktop)-1))
+        xdotool set_desktop_for_window $active_window $new_workspace
+        xdotool set_desktop $new_workspace
+    else
+        exit 1
+    fi
+}
+
+windowwitcher_menu() {
+    switcher_menu_items=""
+    selected_window=""
+    active_window_pid=$(get_active_window)
+    highlighted_item=""
+    windows_list=$(xdotool search --name --all --desktop $(xdotool get_desktop) '')
+    IFSBAK=$IFS
+    IFS=$'\n'
+    for window_pid in $windows_list
+    do
+        item="$window_pid $(get_window_name $window_pid)"
+        switcher_menu_items+="$item\n"
+        if [[ "$window_pid" == "$active_window_pid" ]]
+        then
+            highlighted_item="$item"
+        fi
+    done
+    IFS=$IFSBAK
+
+    selected_item=$(rofi_ask "$switcher_menu_items" "$highlighted_item" "Window Switcher")
+    if [[ -z $selected_item ]]
+    then
+        exit 1
+    else
+        selected_item_pid=$(echo $selected_item | cut -d ' ' -f 1)
+        xdotool windowactivate $selected_item_pid
+    fi
+}
+
+# main
+if [[ "$1" == "--active-window-icon" ]]
+then
+    activewindow_icon
+elif [[ "$1" == "--workspace-icon" ]]
+then
+    workspace_icon
+elif [[ "$1" == "--workspace-switcher-menu" ]]
+then
+    workspaceswitcher_menu
+elif [[ "$1" == "--active-window-menu" ]]
+then
+    activewindow_menu
+elif [[ "$1" == "--window-switcher-menu" ]]
+then
+    windowwitcher_menu
+else
+    exit 1
+fi
+exit 0
