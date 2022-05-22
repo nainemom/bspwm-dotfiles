@@ -143,32 +143,41 @@ sink_or_source_volume_menu() {
     sink_or_source_volume_menu $1
 }
 
-sound_menu() {
+output_menu() {
     first_menu_items=""
     set_sink_volume_menu_item="Set Output Volume"
-    set_source_volume_menu_item="Set Input Volume"
     show_sinks_menu_item="Select Output Device"
-    show_sources_menu_item="Select Input Device"
     show_cards_menu_item="Manage Cards Profiles"
 
     first_menu_items+="$set_sink_volume_menu_item\n"
-    first_menu_items+="$set_source_volume_menu_item\n"
     first_menu_items+="$show_sinks_menu_item\n"
-    first_menu_items+="$show_sources_menu_item\n"
     first_menu_items+="$show_cards_menu_item\n"
     first_menu_selected=$(rofi_ask "$first_menu_items" "" "Sound Manager")
     if [[ "$first_menu_selected" == "$show_cards_menu_item" ]]
     then
         cards_menu
-    elif [[ "$first_menu_selected" == "$show_sources_menu_item" ]]
-    then
-        sinks_or_sources_menu "sources"
     elif [[ "$first_menu_selected" == "$show_sinks_menu_item" ]]
     then
         sinks_or_sources_menu "sinks"
     elif [[ "$first_menu_selected" == "$set_sink_volume_menu_item" ]]
     then
         sink_or_source_volume_menu "sink"
+    else
+        exit 1
+    fi
+}
+
+input_menu() {
+    first_menu_items=""
+    set_source_volume_menu_item="Set Input Volume"
+    show_sources_menu_item="Select Input Device"
+
+    first_menu_items+="$set_source_volume_menu_item\n"
+    first_menu_items+="$show_sources_menu_item\n"
+    first_menu_selected=$(rofi_ask "$first_menu_items" "" "Sound Manager")
+    if [[ "$first_menu_selected" == "$show_sources_menu_item" ]]
+    then
+        sinks_or_sources_menu "sources"
     elif [[ "$first_menu_selected" == "$set_source_volume_menu_item" ]]
     then
         sink_or_source_volume_menu "source"
@@ -177,29 +186,44 @@ sound_menu() {
     fi
 }
 
-sound_icon() {
+output_icon() {
     sink_icon=""
-    if [[ "$(is_sink_mute)" == "yes" ]] || [[ "$(get_sink_volume)" == "0%" ]]
+    if [[ "$(is_sink_mute)" == "yes" ]]
     then
         sink_icon=""
     fi
+
+    echo "$sink_icon $(get_sink_volume)"
+}
+
+input_icon() {
     source_icon=""
-    if [[ "$(is_source_mute)" == "yes" ]] || [[ "$(get_source_volume)" == "0%" ]]
+    if [[ "$(is_source_mute)" == "yes" ]]
     then
         source_icon=""
     fi
-
-    echo "$sink_icon $(get_sink_volume) $source_icon $(get_source_volume)"
+    echo "$source_icon $(get_source_volume)"
 }
 
-
 # main
-if [[ "$1" == "--icon" ]]
+if [[ "$1" == "--output-icon" ]]
 then
-    sound_icon
-elif [[ "$1" == "--menu" ]]
+    output_icon
+elif [[ "$1" == "--input-icon" ]]
 then
-    sound_menu
+    input_icon
+elif [[ "$1" == "--output-menu" ]]
+then
+    output_menu
+elif [[ "$1" == "--input-menu" ]]
+then
+    input_menu
+elif [[ "$1" == "--output-mute-unmute-toggle" ]]
+then
+    pactl set-sink-mute @DEFAULT_SINK@ toggle
+elif [[ "$1" == "--input-mute-unmute-toggle" ]]
+then
+    pactl set-source-mute @DEFAULT_SOURCE@ toggle
 else
     exit 1
 fi
