@@ -39,5 +39,5 @@ rofi_ask() {
         done
         IFS=$IFSBAK
     fi
-    echo -e "$options" | tr -s "\n" | rofi -dmenu -no-fixed-num-lines -p "$title" -selected-row $selected_row 
+    echo -e "$options" | tr -s "\n" | rofi -dmenu -no-fixed-num-lines -p "$title:" -selected-row $selected_row 
 }
