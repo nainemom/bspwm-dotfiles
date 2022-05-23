@@ -87,6 +87,54 @@ is_source_mute() { # yes | no
     pactl get-source-mute @DEFAULT_SOURCE@ | cut -d ':' -f 2 | tr -d ' '
 }
 
+volume_format() {
+    vol=$1
+    if [[ "$vol" == *"%" ]]
+    then
+        vol+="$(echo $vol | tr -d '%')"
+    fi
+
+    if [[ "$vol" -gt "100" ]]
+    then
+        vol="100"
+    fi
+    if [[ "$vol" -lt "0" ]]
+    then
+        vol="0"
+    fi
+    echo "$vol%";
+}
+
+set_volume() {
+    if [[ "$1" == "sink" ]]
+    then
+        volume="$(get_sink_volume | tr -d '%')"
+    else
+        volume="$(get_source_volume | tr -d '%')"
+    fi
+
+    if [[ "$2" == "+"* ]]
+    then
+        xv=$(echo $2 | tr -d '%' | tr -d '+')
+        new_volume=$(($volume + $xv))
+    elif [[ "$2" == "-"* ]]
+    then
+        xv=$(echo $2 | tr -d '%' | tr -d '-')
+        new_volume=$(($volume - $xv))
+    else
+        new_volume=$(echo $2 | tr -d '%')
+    fi
+
+    new_volume=$(volume_format $new_volume)
+
+    if [[ "$1" == "sink" ]]
+    then
+        pactl set-sink-volume @DEFAULT_SINK@ $new_volume
+    else
+        pactl set-source-volume @DEFAULT_SOURCE@ $new_volume
+    fi
+}
+
 sink_or_source_volume_menu() {
     volume="100%"
     mute="no"
@@ -124,18 +172,10 @@ sink_or_source_volume_menu() {
         fi
     elif [[ "$selected" == *"%" ]]
     then
-        new_volume=$(rofi_get "Enter $title Volume (0 to 150)")
-        if [[ "$new_volume" != *"%" ]]
-        then
-            new_volume+="%"
-        fi
+        new_volume=$(rofi_get "Enter $title Volume (0 to 100)")
+        new_volume=$(volume_format $new_volume)
         
-        if [[ "$1" == "sink" ]]
-        then
-            pactl set-sink-volume @DEFAULT_SINK@ $new_volume
-        else
-            pactl set-source-volume @DEFAULT_SOURCE@ $new_volume
-        fi
+        set_volume $1 $new_volume
     else
         sound_menu
         return
@@ -221,6 +261,18 @@ then
 elif [[ "$1" == "--output-mute-unmute-toggle" ]]
 then
     pactl set-sink-mute @DEFAULT_SINK@ toggle
+elif [[ "$1" == "--output-volume-up" ]]
+then
+    set_volume "sink" +5%
+elif [[ "$1" == "--output-volume-down" ]]
+then
+    set_volume "sink" -5%
+elif [[ "$1" == "--input-volume-up" ]]
+then
+    set_volume "source" +5%
+elif [[ "$1" == "--input-volume-down" ]]
+then
+    set_volume "source" -5%
 elif [[ "$1" == "--input-mute-unmute-toggle" ]]
 then
     pactl set-source-mute @DEFAULT_SOURCE@ toggle
