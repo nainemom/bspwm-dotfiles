@@ -140,6 +140,29 @@ windowwitcher_menu() {
     fi
 }
 
+next_workspace() {
+    active_workspace=$(xdotool get_desktop)
+    workspaces_length=$(xdotool get_num_desktops)
+    new_workspace=$((active_workspace+1))
+    if [[ "$new_workspace" -lt "$workspaces_length" ]]
+    then
+        xdotool set_desktop $new_workspace
+    else
+        exit 1
+    fi
+}
+
+prev_workspace() {
+    active_workspace=$(xdotool get_desktop)
+    new_workspace=$((active_workspace-1))
+    if [[ "$new_workspace" -gt "-1" ]]
+    then
+        xdotool set_desktop $new_workspace
+    else
+        exit 1
+    fi
+}
+
 # main
 if [[ "$1" == "--active-window-icon" ]]
 then
@@ -150,6 +173,12 @@ then
 elif [[ "$1" == "--workspace-switcher-menu" ]]
 then
     workspaceswitcher_menu
+elif [[ "$1" == "--next-workspace" ]]
+then
+    next_workspace
+elif [[ "$1" == "--prev-workspace" ]]
+then
+    prev_workspace
 elif [[ "$1" == "--active-window-menu" ]]
 then
     activewindow_menu
