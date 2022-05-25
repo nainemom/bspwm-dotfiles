@@ -1,0 +1,17 @@
+#! /bin/sh
+
+sudo pacman -S --noconfirm polybar rofi sxhkd bspwm
+
+sudo pacman -S --noconfirm pulseaudio pulseaudio-alsa pulseaudio-bluetooth pulseaudio-jack pulseaudio-lirc pulseaudio-zeroconf
+
+sudo pacman -S --noconfirm networkmanager
+
+sudo pacman -S --noconfirm i3lock
+
+sudo pacman -S --noconfirm bluez bluez-utils bluez-tools xterm
+
+sudo pacman -S --noconfirm xdotool
+
+yay -S --noconfirm extra/xorg-setxkbmap aur/xkb-switch
+
+yay -S --noconfirm aur/tuned aur/ttf-material-design-icons 
