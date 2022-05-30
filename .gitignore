@@ -5,7 +5,11 @@
 .config/*
 !.config
 !.config/desktop-scripts
-!.config/bspwm
-!.config/sxhkd
 !.config/polybar
 !.config/rofi
+!.config/openbox
+
+.themes/*
+!.themes
+!.themes/naiop/*
+!.themes/naiop/openbox-3
