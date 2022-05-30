@@ -11,5 +11,4 @@
 
 .themes/*
 !.themes
-!.themes/naiop/*
-!.themes/naiop/openbox-3
+!.themes/naiop
