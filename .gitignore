@@ -7,8 +7,5 @@
 !.config/desktop-scripts
 !.config/polybar
 !.config/rofi
-!.config/openbox
-
-.themes/*
-!.themes
-!.themes/naiop
+!.config/bspwm
+!.config/sxhkd

@@ -1,0 +1,22 @@
+#! /bin/sh
+
+# start keyboard shortcuts
+pgrep -x sxhkd > /dev/null || sxhkd &
+
+# start panel
+pgrep -x polybar > /dev/null || polybar &
+
+bspc monitor -d 1 2 3 4
+
+bspc config border_width         2
+bspc config window_gap          4
+
+bspc config split_ratio          0.52
+bspc config borderless_monocle   true
+bspc config gapless_monocle      true
+
+#disable tiling
+bspc rule -a * floating=on
+
+# set wallpaper
+feh --bg-fill ~/.config/bspwm/wallpaper.jpg &
