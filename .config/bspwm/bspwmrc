@@ -1,22 +1,32 @@
 #! /bin/sh
 
+# setup monitor and workspaces
+~/.config/bspwm/setupmonitors "HDMI-2"
+
 # start keyboard shortcuts
 pgrep -x sxhkd > /dev/null || sxhkd &
 
 # start panel
-pgrep -x polybar > /dev/null || polybar &
+polybar &
 
 bspc monitor -d 1 2 3 4
 
-bspc config border_width         2
-bspc config window_gap          4
+bspc config border_width 2
+bspc config window_gap 0
+bspc config top_padding $(cat ~/.config/polybar/config.ini | grep 'height' | cut -d '=' -f 2 | tr -d ' ' | tr -d 'px')
+
+bspc config normal_border_color '#000000'
+bspc config active_border_color '#000000'
+bspc config focused_border_color '#a80cc7'
 
 bspc config split_ratio          0.52
-bspc config borderless_monocle   true
-bspc config gapless_monocle      true
+bspc config borderless_monocle   false
+bspc config gapless_monocle      false
+bspc config remove_disabled_monitors true
+bspc config remove_unplugged_monitors true
 
 #disable tiling
-bspc rule -a * floating=on
+bspc rule -a '*' state=floating follow=on
 
 # set wallpaper
 feh --bg-fill ~/.config/bspwm/wallpaper.jpg &
