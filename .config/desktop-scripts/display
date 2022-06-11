@@ -1,0 +1,60 @@
+#! /bin/sh
+
+# dependencies: rofi i3lock ttf-material-design-icons(yay)
+
+source "$(dirname "$0")/shared/rofi"
+
+display_menu() {
+    primary_display=$(xrandr --query | grep 'primary' | cut -d ' ' -f 1)
+    is_active=$(xrandr --listactivemonitors | grep "$1" | cut -d ' ' -f 6)
+
+    menu_items=""
+
+    turnon_item="Turn On"
+    turnoff_item="Turn Off"
+    primary_item="Set as Primary"
+    noprimary_item="Set as No-Primary"
+
+    if [[ "$is_active" == "" ]]
+    then
+        menu_items+="$turnon_item\n"
+    else
+        menu_items+="$turnoff_item\n"
+    fi
+
+    if [[ "$primary_display" != "$1" ]]
+    then
+        menu_items+="$primary_item\n"
+    else
+        menu_items+="$noprimary_item\n"
+    fi
+
+    selected_item=$(rofi_ask "$menu_items" "" "$1")
+}
+
+displays_menu() {
+    menu_items=$(xrandr --query | grep ' connected' | cut -d ' ' -f 1)
+    selected_item=$(rofi_ask "$menu_items" "" "Display Settings")
+    if [[ "$selected_item" == "" ]]
+    then
+        exit 1
+    else
+        display_menu $selected_item
+    fi
+}
+
+display_icon() {
+    echo ""
+}
+
+# main
+if [[ "$1" == "--icon" ]]
+then
+    display_icon
+elif [[ "$1" == "--menu" ]]
+then
+    displays_menu
+else
+    exit 1
+fi
+exit 0
