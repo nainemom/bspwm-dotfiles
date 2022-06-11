@@ -22,7 +22,7 @@ session_menu() {
         i3lock -c 000000
     elif [[ "$selected_item" == "$logout_item" ]]
     then
-        openbox --exit
+        bspc quit
     elif [[ "$selected_item" == "$shutdown_item" ]]
     then
         shutdown -h now
