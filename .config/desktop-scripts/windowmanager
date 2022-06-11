@@ -35,12 +35,10 @@ activewindow_icon() {
 }
 
 workspace_icon() {
-    workspaces_length=$(xdotool get_num_desktops)
-    active_workspace=$(xdotool get_desktop)
-    output=""
-    for (( i=0; i<=((workspaces_length-1)); i++ ))
+    focused_desktop=$(bspc query --desktops -d focused)
+    for desktop in $(bspc query --desktops)
     do
-        if [[ "$i" == "$active_workspace" ]]
+        if [[ "$desktop" == "$focused_desktop" ]]
         then
             output+=""
         else
@@ -51,17 +49,11 @@ workspace_icon() {
 }
 
 workspaceswitcher_menu() {
-    workspaces_length=$(xdotool get_num_desktops)
-    active_workspace="Workspace $(xdotool get_desktop)"
-    menu_items=""
-    for (( i=0; i<=((workspaces_length-1)); i++ ))
-    do
-        menu_items+="Workspace $i\n"
-    done
-    selected_item=$(rofi_ask "$menu_items" "$active_workspace" "Workspace Switcher" | cut -d ' ' -f 2)
-    if [[ $selected_item -lt "$workspaces_length" ]]
+    focused_desktop=$(bspc query --desktops -d focused)
+    selected_item=$(rofi_ask "$(bspc query --desktops)" "$focused_desktop" "Workspace Switcher")
+    if [[ $selected_item ]]
     then
-        xdotool set_desktop $selected_item
+        bspc desktop -f $selected_item
     else
         exit 1
     fi
@@ -163,6 +155,20 @@ prev_workspace() {
     fi
 }
 
+list_of_windows_in_current_workspace() {
+    xdotool search --name --desktop $(xdotool get_desktop) ''
+}
+
+next_window() {
+    active_window_pid=$(get_active_window)
+    windows_list=$(list_of_windows_in_current_workspace)
+}
+
+prev_window() {
+    active_window_pid=$(get_active_window)
+    windows_list=$(list_of_windows_in_current_workspace)
+}
+
 # main
 if [[ "$1" == "--active-window-icon" ]]
 then
@@ -185,6 +191,13 @@ then
 elif [[ "$1" == "--window-switcher-menu" ]]
 then
     windowwitcher_menu
+elif [[ "$1" == "--next-window" ]]
+then
+    next_window
+elif [[ "$1" == "--prev-window" ]]
+then
+    prev_window
+
 else
     exit 1
 fi
